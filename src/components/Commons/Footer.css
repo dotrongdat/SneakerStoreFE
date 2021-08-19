@@ -1,0 +1,9 @@
+.footer{
+    background-color: rgb(60, 61, 60);
+    height: 4rem;
+    opacity: 0.9;
+    width: 100%;
+    position: relative;
+    bottom: 0%;   
+    z-index: -1;
+}

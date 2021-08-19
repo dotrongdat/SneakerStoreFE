@@ -1,0 +1,173 @@
+import React,{useState,useEffect,useCallback} from 'react';
+import Header from '../Commons/Header';
+import Footer from '../Commons/Footer';
+import ProductList from '../Layouts/ProductList';
+import ProductDetail from '../Layouts/ProductDetail';
+import CustomPagination from '../Utils/Views/CustomPagination';
+import SearchBar from '../Layouts/SearchBar';
+import {routeProductAPI,defaultParamValue} from '../Constant/ProductConstant';
+import {Route, Switch} from 'react-router-dom';
+import CustomRoute from '../Utils/CustomRoute.util';
+import ProductDetailCreate from '../Layouts/ProductDetail_Create';
+import AddNewProductButton from '../Utils/Views/AddNewProductButton';
+import {Toast} from 'primereact/toast';
+import FilterBar from '../Layouts/FilterBar';
+import TabMenu from '../Layouts/TabMenu';
+import SignIn from './SignIn';
+import SignUp from './SignUp';
+import categoryService from '../../service/category.service';
+import productService from '../../service/product.service';
+import credentialService from '../../service/credential.service';
+import {useSelector,useDispatch} from 'react-redux';
+import {roles} from '../Constant/CredentialConstant';
+import Loading from '../Utils/Views/Loading';
+import Cart from '../Layouts/Cart';
+import statusCode from 'http-status-codes';
+import OrderHistory from '../Layouts/OrderHistory';
+import Order from '../Layouts/Order';
+
+const Main=()=>{
+    const [isCompleteInitUser, setIsCompleteInitUser] = useState(false);
+    const [productUrl,setProductUrl]=useState(routeProductAPI.search);
+    const [params,setParams]=useState(defaultParamValue);
+    const [page,setPage]=useState('0');
+    const [totalPage,setTotalPage]=useState('0');
+    const [searchData,setSearchData]=useState('');
+    const [updateDataAction,setUpdateDataAction]=useState('');
+    //const [updateCategoryAction,setUpdateCategoryAction]=useState(false);
+    
+    const dispatch = useDispatch();
+    const {user} = useSelector(state=>state); 
+
+    const onChangeQueryValue= async (_params,deleteParams=[])=>{
+        let updateData={};
+        await setParams((prevData)=>{
+            updateData={...prevData};
+            for(let param in _params){
+                updateData={...updateData,[param]:_params[param]};
+            }
+            for(let param of deleteParams){
+                delete updateData[param];
+            }
+            return updateData;
+        });
+        await getSearchData(updateData);
+    }
+    const onUpdateDataHandler=()=>{
+        setUpdateDataAction(!updateDataAction);
+    }
+    const getSearchData = async (_params) => {
+        global.loading.show();
+        const res =await productService.search(_params);
+        const products=res.data.payload.products;
+        const totalPage=res.data.payload.total;
+        const page=_params.page;
+        if(page) setPage(page)
+        else{
+            if(totalPage>0) setPage(1);
+            else setPage(0);
+        }
+        setSearchData(products);
+        setTotalPage(totalPage);
+        global.loading.hide();
+    }
+    useEffect(()=>{
+        const getCategories = async () =>{
+            const res = await categoryService.getAll();
+            switch (res.status){
+                case statusCode.INTERNAL_SERVER_ERROR:
+                    global.toast.show({severity:'error', summary: 'Category', detail: 'Fail to load category', life: 1500});
+                    break;
+                default:
+            }
+        }
+        const getUser = async ()=>{
+            await credentialService.signinToken();  
+            setIsCompleteInitUser(true); 
+        }
+        getCategories();
+        getUser();
+        global.socket.on('signIn',user=>dispatch({type:'signin',user}));
+        global.socket.on('signOut',()=>dispatch({type:'signout'})); 
+        global.socket.on('sync',(user)=>dispatch({type:'sync',user})); 
+        global.socket.on('updateCart',(cart)=>dispatch({type:'updateCart',cart})); 
+        return () => {
+            console.log('Reload');
+            global.socket.off('signIn');
+            global.socket.off('signOut');
+            global.socket.off('sync');
+            global.socket.off('updateCart');
+            let _socketID = JSON.parse(localStorage.getItem('socketID'));
+            _socketID = _socketID.filter(sk=>sk !== global.socket.id);
+            console.log('_socketID:'+_socketID);
+            localStorage.setItem('socketID',JSON.stringify(_socketID)); 
+        }   
+    },[])
+    // useEffect(()=>{
+    //     const itv = setInterval(()=>{
+    //         const lUser = localStorage.getItem('user');
+    //         const cUser = (user.role === roles.NO_AUTH) ? null : JSON.stringify(user);
+    //         if(cUser !== lUser){
+    //             (lUser) ? dispatch({type:'signin',user : JSON.parse(lUser)}) : dispatch({type:'signout'});
+    //         }
+    //     },5000);
+    //     return ()=>{
+    //         clearInterval(itv);
+    //     }
+    // },[user])
+    useEffect(()=>{
+            window.scrollTo(0,0);
+            getSearchData(params);
+    },[updateDataAction]);
+    return (
+        <React.Fragment>
+            <Loading ref={(ref)=>global.loading=ref}/>
+            <Header/>
+            <SearchBar onSubmit={onChangeQueryValue}/>           
+            <Toast ref={(ref) => global.toast=ref}/>
+            <div className="p-grid p-justify-center" style={{minHeight: '82.3vh',marginRight:'0px'}}>
+                <div className='p-col-10' style={{position:'relative',zIndex:'0'}}>
+                        <Switch>
+                        <Route path='/' exact>
+                            {user.role === roles.ADMIN && <AddNewProductButton/>}
+                            <TabMenu onChange={onChangeQueryValue} categoryParam={params.category}/>
+                            <FilterBar onSubmit={onChangeQueryValue} params={params}/>  
+                            <ProductList products={searchData}/>
+                            <CustomPagination url={productUrl} params={params} page={page} totalPage={totalPage}  onClickPageBtn={onChangeQueryValue}/>
+                        </Route>
+                        <CustomRoute status = {isCompleteInitUser} path='/signin' backPath='/' roles={[roles.NO_AUTH]} exact>
+                            <SignIn/>
+                        </CustomRoute>
+
+                        <CustomRoute status = {isCompleteInitUser} path='/signup' backPath='/' roles={[roles.NO_AUTH]} exact>
+                            <SignUp />
+                        </CustomRoute>
+                        <Route path={'/product/:_id'}>
+                            <ProductDetail onUpdate={onUpdateDataHandler}/>
+                        </Route>
+                        <CustomRoute status = {isCompleteInitUser} path='/product' backPath='/signin' roles={[roles.ADMIN]} exact>
+                            <ProductDetailCreate onUpdate={onUpdateDataHandler}/>
+                        </CustomRoute>
+                        <CustomRoute status = {isCompleteInitUser} path='/cart' backPath='/signin' roles={[roles.CUSTOMER]}  exact>
+                            <Cart/>
+                        </CustomRoute>
+                        <CustomRoute status = {isCompleteInitUser} path='/order' backPath='/signin' roles={[roles.CUSTOMER]}  exact>
+                            <OrderHistory/>
+                        </CustomRoute>
+                        <CustomRoute status = {isCompleteInitUser} path='/order/:_id' backPath='/signin' roles={[roles.ADMIN]}  exact>
+                            <Order/>
+                        </CustomRoute>
+                        
+                        <Route>
+                            <div style={{minHeight:'79vh'}}>
+                                <h1>Not found</h1>
+                            </div>   
+                        </Route>
+                    </Switch>                  
+                </div>
+            </div>           
+            <Footer/>
+        </React.Fragment>
+    )
+}
+export default Main;
