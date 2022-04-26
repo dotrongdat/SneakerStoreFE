@@ -2,7 +2,7 @@ import {routeCredentialAPI} from '../components/Constant/CredentialConstant';
 import {encrypt} from '../components/Utils/Crypto.util';
 import store from '../store/index';
 import statusCode from 'http-status-codes';
-import {nonAuthRequest} from '../components/Utils/Request.util';
+import {nonAuthRequest, authRequest} from '../components/Utils/Request.util';
 
 const signin = async (model)=>{
     model.username=encrypt(model.username);
@@ -26,19 +26,94 @@ const signout = () => {
     store.dispatch({type: 'signout'});
 }
 
-const signup = async (model)=>{
-    model.username=encrypt(model.username);
+// const signup = async (model)=>{
+//     model.username=encrypt(model.username);
+//     model.password=encrypt(model.password);
+//     const res = await nonAuthRequest.postRequest(routeCredentialAPI.signup,model);                
+//     switch (res.status){
+//         case statusCode.OK: 
+//             const {user,token,refresh} = res.data.payload;
+//             store.dispatch({type:'signin',user,token,refresh});
+//             break;
+//         default:
+//     }
+//     return res;
+// }
+const signup = async (model) => {
     model.password=encrypt(model.password);
-    const res = await nonAuthRequest.postRequest(routeCredentialAPI.signup,model);                
+    const res = await nonAuthRequest.postRequest(routeCredentialAPI.signup,model);
     switch (res.status){
         case statusCode.OK: 
-            const {user,token,refresh} = res.data.payload;
-            store.dispatch({type:'signin',user,token,refresh});
+            // const {user,token,refresh} = res.data.payload;
+            // store.dispatch({type:'signin',user,token,refresh});
             break;
         default:
     }
     return res;
 }
+
+const refreshVerifyCode = async (model) => {
+    const res = await nonAuthRequest.getRequest(routeCredentialAPI.refreshVerifyCode,model);
+    switch (res.status){
+        case statusCode.OK:
+            break;
+        default:
+    }
+    return res;
+}
+
+const verifyCode = async (model) => {
+    if(model.newPassword) model.newPassword = encrypt(model.newPassword);
+    const res = await nonAuthRequest.postRequest(routeCredentialAPI.verifyCode,model);
+    switch (res.status){
+        case statusCode.OK: 
+            break;
+        default:
+    }
+    return res;
+}
+
+const forgotPassword = async (model) => {
+    const res = await nonAuthRequest.postRequest(routeCredentialAPI.forgotPassword,model);
+    switch (res.status){
+        case statusCode.OK:
+            break;
+        default:
+    }
+    return res;
+}
+
+const verifyForgotPasswordCode = async (model) => {
+    const res = await nonAuthRequest.postRequest(routeCredentialAPI.verifyForgotPasswordCode,model);
+    switch (res.status){
+        case statusCode.OK:
+            break;
+        default:
+    }
+    return res;
+}
+
+const refreshVerifyForgotPasswordCode = async (model) => {
+    const res = await nonAuthRequest.getRequest(routeCredentialAPI.refreshVerifyForgotPasswordCode,model);
+    switch (res.status){
+        case statusCode.OK:
+            break;
+        default:
+    }
+    return res;
+}
+
+const resetPassword = async (model) => {
+    model.newPassword = encrypt(model.newPassword);
+    const res = await authRequest.postRequest(routeCredentialAPI.resetPassword,model);
+    switch (res.status){
+        case statusCode.OK:
+            break;
+        default:
+    }
+    return res;
+}
+
 const signinToken = async () =>{
     const lToken = localStorage.getItem('token');
     const lRefresh = localStorage.getItem('refresh');
@@ -57,14 +132,32 @@ const signinToken = async () =>{
             }
         }else store.dispatch({type:'signout'});        
 }
-
+const refreshToken = async (model) => {
+    const res = await nonAuthRequest.postRequest(routeCredentialAPI.refreshToken,model);
+    switch (res.status){
+        case statusCode.OK:
+            // const {user,token,refresh} = res.data.payload;
+            // store.dispatch({type:'signin',user,token,refresh});
+            break;
+        default:
+    }
+    return res;
+}
 const findByUsername = async (params) =>{
     return await nonAuthRequest.getRequest(routeCredentialAPI.findByUsername,params);
 }
+// eslint-disable-next-line import/no-anonymous-default-export
 export default {
     signin,
     signout,
     signup,
     signinToken,
-    findByUsername
+    findByUsername,
+    refreshVerifyCode,
+    verifyCode,
+    forgotPassword,
+    verifyForgotPasswordCode,
+    refreshVerifyForgotPasswordCode,
+    resetPassword,
+    refreshToken
 }

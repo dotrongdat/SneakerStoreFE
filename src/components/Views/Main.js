@@ -15,6 +15,7 @@ import FilterBar from '../Layouts/FilterBar';
 import TabMenu from '../Layouts/TabMenu';
 import SignIn from './SignIn';
 import SignUp from './SignUp';
+import ForgotPassword from './ForgotPassword';
 import categoryService from '../../service/category.service';
 import productService from '../../service/product.service';
 import credentialService from '../../service/credential.service';
@@ -25,6 +26,8 @@ import Cart from '../Layouts/Cart';
 import statusCode from 'http-status-codes';
 import OrderHistory from '../Layouts/OrderHistory';
 import Order from '../Layouts/Order';
+import Admin from '../Layouts/Admin';
+import CustomerGuest from '../Layouts/CustomerGuest';
 
 const Main=()=>{
     const [isCompleteInitUser, setIsCompleteInitUser] = useState(false);
@@ -124,8 +127,20 @@ const Main=()=>{
             <Loading ref={(ref)=>global.loading=ref}/>
             <Header/>
             <SearchBar onSubmit={onChangeQueryValue}/>           
-            <Toast ref={(ref) => global.toast=ref}/>
-            <div className="p-grid p-justify-center" style={{minHeight: '82.3vh',marginRight:'0px'}}>
+            <Toast ref={(ref) => global.toast=ref}/>            
+            <div style={{minHeight: '82.3vh',marginRight:'0px', backgroundColor:'whitesmoke'}}>
+                <Switch>
+                    <CustomRoute status = {isCompleteInitUser} path='/admin' backPath='/' roles={[roles.ADMIN]}>
+                        <Admin isCompleteInitUser={isCompleteInitUser}/>
+                    </CustomRoute>
+                    <CustomRoute status = {isCompleteInitUser} path='/' backPath='/admin' roles={[roles.CUSTOMER,roles.NO_AUTH]}>
+                        <CustomerGuest isCompleteInitUser={isCompleteInitUser}/>
+                    </CustomRoute>
+                </Switch>
+                {/* {user.role === roles.ADMIN ? <Admin>
+
+                </Admin>
+                :
                 <div className='p-col-10' style={{position:'relative',zIndex:'0'}}>
                         <Switch>
                         <Route path='/' exact>
@@ -141,6 +156,9 @@ const Main=()=>{
 
                         <CustomRoute status = {isCompleteInitUser} path='/signup' backPath='/' roles={[roles.NO_AUTH]} exact>
                             <SignUp />
+                        </CustomRoute>
+                        <CustomRoute status = {isCompleteInitUser} path='/forgotpassword' backPath='/' roles={[roles.NO_AUTH]} exact>
+                            <ForgotPassword/>
                         </CustomRoute>
                         <Route path={'/product/:_id'}>
                             <ProductDetail onUpdate={onUpdateDataHandler}/>
@@ -165,6 +183,7 @@ const Main=()=>{
                         </Route>
                     </Switch>                  
                 </div>
+                } */}
             </div>           
             <Footer/>
         </React.Fragment>

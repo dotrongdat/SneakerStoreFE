@@ -27,7 +27,50 @@ const create = async (model) => {
     return res;
 }
 
+const update = async (model) => {
+    const res = await authRequest.putRequest(routeCategoryAPI.main,model);
+    switch (res.status){
+        case statusCode.OK:
+            const {category} = res.data.payload;
+            store.dispatch({type:'updateCategory',category});
+            break;
+        default:
+            break;
+    }
+    return res;
+}
+
+const enable = async (model) => {
+    const res = await authRequest.putRequest(routeCategoryAPI.enable,model);
+    switch (res.status){
+        case statusCode.OK:
+            const {category} = res.data.payload;
+            store.dispatch({type:'updateCategory',category});
+            break;
+        default:
+            break;
+    }
+    return res;
+}
+
+const disable = async (model) => {
+    const res = await authRequest.putRequest(routeCategoryAPI.disable,model);
+    switch (res.status){
+        case statusCode.OK:
+            const {category} = res.data.payload;
+            store.dispatch({type:'updateCategory',category});
+            break;
+        default:
+            break;
+    }
+    return res;
+}
+
+
 export default {
     getAll,
-    create
+    create,
+    update,
+    enable,
+    disable
 }

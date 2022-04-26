@@ -7,7 +7,9 @@ const DEFAULT_STATE={
         role:roles.NO_AUTH,
         cart:[]
     },
-    categories:[]
+    categories:[],
+    allProducts:[],
+    searchProducts:[]
 }
 const reducer = (state=DEFAULT_STATE, action) =>{
 
@@ -23,6 +25,9 @@ const reducer = (state=DEFAULT_STATE, action) =>{
         //     global.socket.emit('SignOut',user);            
         //     return {...state,isSignIn:true,user};
         // }
+        case 'findProductByCategory':{
+            return {...state,searchProducts: action.searchProducts}
+        }
         case 'sync':{
             console.log(action.user);
             return {...state,user:action.user};
@@ -51,6 +56,12 @@ const reducer = (state=DEFAULT_STATE, action) =>{
         }
         case 'addCategory':{
             return {...state,categories:[...state.categories,action.category]}
+        }
+        case 'updateCategory':{
+            let categories = [...state.categories];
+            const index = categories.findIndex(category=>category._id === action.category._id);
+            categories[index]  = action.category;
+            return {...state, categories}
         }
         case 'updateCart': {
             return {...state,user : {...state.user,cart: action.cart}};

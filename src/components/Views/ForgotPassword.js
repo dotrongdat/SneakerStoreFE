@@ -13,7 +13,6 @@ import Validation from '../Utils/Validation.utils';
 import CredentialValidation from '../Validations/CredentialRequest.validation';
 import statusCode from 'http-status-codes';
 import { logoURL } from '../Constant/ResourceConstant';
-import { InputNumber } from 'primereact/inputnumber';
 
 let DEFAULT_ERRORS_STATE = {
     fullName:[],
@@ -32,17 +31,16 @@ const ErrorText = (props) => {
 let tInterval = null;
 let tTimeOut = null;
 
-const SignUp = (props)=>{
+const ForgotPassword = (props)=>{
     const _useHistory = useHistory();
     const [errors,setErrors] = useState(DEFAULT_ERRORS_STATE);
-    const [inputState,setInputState] = useState(0); // 0 input phonenumber, 1 input verify code, 2 input name and password
+    const [inputState,setInputState] = useState(0);
     const [verifyCodeInputValue, setVerifyCodeInputValue] = useState([]);
-    const [signUpToken,setSignUpToken] = useState();
+    const [resetPasswordToken,setResetPasswordToken] = useState();
     const [timer,setTimer] = useState(0);
-    const [timerState, setTimerState] = useState(0); //0 not start, 1 start
+
 
     const phoneNumberRef=useRef();
-    const fullNameRef=useRef();
     const passwordRef=useRef();
     const confirmPasswordRef=useRef();    
 
@@ -51,7 +49,6 @@ const SignUp = (props)=>{
         if(tInterval != null) clearInterval(tInterval);
         if(tTimeOut != null) clearTimeout(tTimeOut);
         tInterval = setInterval(()=>{
-            console.log("show");
             setTimer(prevData =>  prevData-1)
         },1000);
         tTimeOut = setTimeout(()=> clearInterval(tInterval),second*1000);
@@ -63,7 +60,7 @@ const SignUp = (props)=>{
     }
 
     const resendVerifyCode = async () =>{
-        const res = await credentialService.refreshVerifyCode({phoneNumber: phoneNumberRef.current.value});
+        const res = await credentialService.refreshVerifyForgotPasswordCode({phoneNumber: phoneNumberRef.current.value});
         switch (res.status){
             case statusCode.OK:
                 console.log(res.data.payload.verifyCode);
@@ -80,10 +77,11 @@ const SignUp = (props)=>{
             default:
         }
     }
+
     const submitPhoneNumberHandler = async () => {
         const validateReq = Validation(CredentialValidation.sendPhoneNumber({phoneNumber: phoneNumberRef.current.value}));
         if(validateReq.isValid){
-            const res = await credentialService.signup({phoneNumber: phoneNumberRef.current.value});
+            const res = await credentialService.forgotPassword({phoneNumber: phoneNumberRef.current.value});
             switch (res.status){
                 case statusCode.OK:
                     setInputState(1);
@@ -111,11 +109,11 @@ const SignUp = (props)=>{
         const validateReq = Validation(CredentialValidation.sendVerifyCode({verifyCode: verifyCodeInputValue}));
         if(validateReq.isValid){
             stopTimer();
-            const res = await credentialService.verifyCode({phoneNumber: phoneNumberRef.current.value,verifyCode: verifyCodeInputValue});
+            const res = await credentialService.verifyForgotPasswordCode({phoneNumber: phoneNumberRef.current.value,verifyCode: verifyCodeInputValue});
             switch (res.status){
                 case statusCode.OK:
                     setInputState(2);
-                    setSignUpToken(res.data.payload.signUpToken);
+                    setResetPasswordToken(res.data.payload.resetPasswordToken);
                     break;
                 case statusCode.METHOD_FAILURE:
                     global.toast.show({severity:'error', summary: 'Fail', detail: res.data.message, life: 1500});
@@ -124,8 +122,8 @@ const SignUp = (props)=>{
                         setTimer(res.data.payload.timer);
                         startTimer(res.data.payload.timer);
                     }
-                    setErrors(DEFAULT_ERRORS_STATE);
                     setVerifyCodeInputValue([]);
+                    setErrors(DEFAULT_ERRORS_STATE);
                     break;
                 case statusCode.INTERNAL_SERVER_ERROR:
                     global.toast.show({severity:'error', summary: 'Fail', detail: res.data.message, life: 1500});
@@ -141,27 +139,25 @@ const SignUp = (props)=>{
         });
     }
 
-    const submitPasswordFullNameHandler = async () => {
-        const validateReq = Validation(CredentialValidation.signUp({
-            fullName: fullNameRef.current.value,
+    const submitNewPasswordHandler = async () => {
+        const validateReq = Validation(CredentialValidation.forgotPassword({
             password: passwordRef.current.inputRef.current.value,
             confirmPassword: passwordRef.current.inputRef.current.value,
         }));
         if(validateReq.isValid){
-            const res = await credentialService.signup({
+            const res = await credentialService.forgotPassword({
                 phoneNumber: phoneNumberRef.current.value,
-                password: passwordRef.current.inputRef.current.value,
-                name: fullNameRef.current.value,
-                signUpToken
+                newPassword: passwordRef.current.inputRef.current.value,
+                resetPasswordToken
             });
             switch (res.status){
                 case statusCode.OK:
-                    global.toast.show({severity:'success', summary: 'Success', detail: "Sign up successfully", life: 1500});
+                    global.toast.show({severity:'success', summary: 'Success', detail: "Reset password successfully", life: 1500});
                     _useHistory.replace('/signin');
                     break;
                 case statusCode.METHOD_FAILURE:
                     global.toast.show({severity:'error', summary: 'Fail', detail: res.data.message, life: 1500});
-                    break;
+                     break;
                 case statusCode.INTERNAL_SERVER_ERROR:
                     global.toast.show({severity:'error', summary: 'Fail', detail: res.data.message, life: 1500});
                     break;
@@ -184,7 +180,7 @@ const SignUp = (props)=>{
                 break;
             case 1: await submitVerifyCodeHandler();
                 break;
-            default: await submitPasswordFullNameHandler();
+            default: await submitNewPasswordHandler();
         }
         global.loading.hide();
     }
@@ -204,7 +200,7 @@ const SignUp = (props)=>{
                 <div className='p-col-8' style={{backgroundColor:'white'}}>
                     <div className='p-grid p-justify-center p-ai-center vertical-container'  style={{height:'95%'}}>
                         <div className='p-col-12 p-grid p-justify-center'>
-                            <h3 className='p-col-12 p-mb-6' style={{textAlign:'center'}}>Sign Up</h3>
+                            <h3 className='p-col-12 p-mb-6' style={{textAlign:'center'}}>Forgot Password</h3>
                             <Form className='p-col-8' onSubmit={submitHandler}>
                                 {inputState === 0 && 
                                     <Fragment>
@@ -226,23 +222,13 @@ const SignUp = (props)=>{
                                     </Fragment>
                                 }
                                 {inputState === 2 && 
-                                    <Fragment>
-                                        <Form.Group>
-                                            <div className='p-inputgroup'>
-                                                <span className="p-inputgroup-addon">
-                                                    <i className="pi pi-user"></i>
-                                                </span>
-                                                <InputText ref={fullNameRef} placeholder="Name" />                                                    
-                                            </div>
-                                            {errors.fullName.map((error,index)=> <ErrorText key={index} text={error}/>)}
-                                        </Form.Group>
-                                        
+                                    <Fragment>                                        
                                         <Form.Group>
                                             <div className='p-inputgroup'>
                                                 <span className="p-inputgroup-addon">
                                                     <i className="pi pi-shield"></i>
                                                 </span>
-                                                <Password ref={passwordRef} placeholder="Password" />
+                                                <Password ref={passwordRef} placeholder="New password" />
                                             </div>
                                             {errors.password.map((error,index)=> <ErrorText key={index} text={error}/>)}
                                         </Form.Group>
@@ -260,7 +246,7 @@ const SignUp = (props)=>{
                                 }
                                 <Divider/>
                                 <div className='p-grid p-justify-center'>                                                                     
-                                    {inputState === 0 && <Button className='p-col-12' type='submit' label='Send Verify Code'/>}
+                                    {inputState === 0 && <Button className='p-col-12' type='submit' label='Send Verify Code'/>}                                    
                                     {inputState === 1 && 
                                         <Fragment>
                                             <div className='p-col-12 p-mb-1' style={{textAlign:'end'}}>
@@ -272,7 +258,7 @@ const SignUp = (props)=>{
                                             <Button className='p-col-12' type='submit' label='Verify'/>
                                         </Fragment>
                                     }
-                                    {inputState ===2 && <Button className='p-col-12' type='submit' label='Sign Up'/>}
+                                    {inputState === 2 && <Button className='p-col-12' type='submit' label='Reset Password'/>}
                                 </div>
                             </Form>
                         </div>
@@ -286,4 +272,4 @@ const SignUp = (props)=>{
     );
 }
 
-export default SignUp;
+export default ForgotPassword;

@@ -324,7 +324,7 @@ const MessageNotification = (props,ref) =>{
     },[])
     return (
         <React.Fragment>
-            <i className="pi pi-comment p-mr-4 p-text-secondary p-overlay-badge" style={{ fontSize: '2rem',cursor:'pointer' }} onClick={e=>overlayPanelRef.current.toggle(e)}>{messageIdUnread.length>0 && <Badge value={messageIdUnread.length} severity="success"></Badge>}</i>
+            <i className="pi pi-comment p-mr-4 p-text-secondary p-overlay-badge" style={{ fontSize: '1.6rem',cursor:'pointer' }} onClick={e=>overlayPanelRef.current.toggle(e)}>{messageIdUnread.length>0 && <Badge value={messageIdUnread.length} severity="success"></Badge>}</i>
             <OverlayPanel ref={overlayPanelRef} style={{width:'30vw'}}>
                 <DataScroller  value={data} itemTemplate={itemTemplate} loadingTemplate={loadingTemplate} showLoader rows={6}  inline scrollHeight="60vh"  onLazyLoad={onLazyLoadHandler}/>
             </OverlayPanel>

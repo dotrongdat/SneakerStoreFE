@@ -126,7 +126,7 @@ const Notification = () =>{
     },[]);
     return (
         <div>
-            <i className="pi pi-bell p-mr-4 p-text-secondary p-overlay-badge" style={{ fontSize: '2rem',cursor:'pointer' }} onClick={e=>overlayPanelRef.current.toggle(e)}>{totalUnread>0 && <Badge value={totalUnread} severity="danger"></Badge>}</i>
+            <i className="pi pi-bell p-mr-4 p-text-secondary p-overlay-badge" style={{ fontSize: '1.6rem',cursor:'pointer' }} onClick={e=>overlayPanelRef.current.toggle(e)}>{totalUnread>0 && <Badge value={totalUnread} severity="danger"></Badge>}</i>
             <OverlayPanel ref={overlayPanelRef} style={{width:'30vw'}}>
                 <DataScroller  value={data} itemTemplate={itemTemplate} loadingTemplate={loadingTemplate} showLoader rows={6}  inline scrollHeight="60vh" lazy onLazyLoad={onLazyLoadHandler}/>
             </OverlayPanel>

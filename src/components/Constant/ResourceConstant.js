@@ -6,3 +6,4 @@ export const routeResource={
 export const validFileExtension=[
     '.jpg','.png'
 ]
+export const logoURL = 'https://storage.googleapis.com/maskstore-abf18.appspot.com/1650566427892.png';
