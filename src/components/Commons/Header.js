@@ -161,13 +161,13 @@ const Header=()=>{
             //<Toolbar className="header" right={content} style={{position:'relative',zIndex:'1'}}/>
             <div className='p-grid p-justify-center' style={{backgroundColor: PRIMARY_COLOR, marginRight: '0.5px'}}> 
                 <div className='p-col-8 p-grid p-justify-center'>
-                    <div className='p-col-4 p-grid p-justify-center p-jc-center p-mt-4'>
+                    <div className='p-col-4 p-grid p-mt-4'>
                         <p style={{color: "white"}}>Order hotline <Chip label='0939240054' style={{backgroundColor: 'green', color:'white'}} icon="pi pi-phone"/></p>
                     </div>
                     <div className='p-col-4'>
                         <div className='p-grid p-justify-center p-ai-center vertical-container'>
                             <div className='p-col-12 p-mt-3 p-mb-1' style={{textAlign:'center'}}>
-                                <h1 style={{color: "white"}}>MASK STORE</h1>
+                                <h1 style={{color: "white", cursor: 'pointer'}} onClick={()=>_useHistory.push('/')}>MASK STORE</h1>
                             </div>
                             {/* <div className='p-col-8 p-grid p-jc-between'>
                                 <h6 className='p-col' style={{textAlign:'center',color: "white"}}>Home</h6>

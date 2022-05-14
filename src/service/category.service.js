@@ -44,8 +44,7 @@ const enable = async (model) => {
     const res = await authRequest.putRequest(routeCategoryAPI.enable,model);
     switch (res.status){
         case statusCode.OK:
-            const {category} = res.data.payload;
-            store.dispatch({type:'updateCategory',category});
+            store.dispatch({type:'enableCategory', _id: model._id});
             break;
         default:
             break;
@@ -57,8 +56,7 @@ const disable = async (model) => {
     const res = await authRequest.putRequest(routeCategoryAPI.disable,model);
     switch (res.status){
         case statusCode.OK:
-            const {category} = res.data.payload;
-            store.dispatch({type:'updateCategory',category});
+            store.dispatch({type:'disableCategory',_id: model._id});
             break;
         default:
             break;

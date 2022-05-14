@@ -13,7 +13,7 @@ export const validRangeValue={
     description:{min:0,max:2000},
     publishedYear:{min:1800,max:new Date().getFullYear()},
 }
-export const defaultParamValue={
+export const DEFAULT_PARAM_VALUE={
     name:'',
     priceFrom: 0,
     priceTo: Number.MAX_SAFE_INTEGER,
@@ -22,3 +22,4 @@ export const defaultParamValue={
     page:1,
     itemPerPage: 12
 }
+//export const ITEM_PER_PAGE = 12;

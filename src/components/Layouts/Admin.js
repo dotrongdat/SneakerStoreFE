@@ -6,6 +6,7 @@ import CustomRoute from '../Utils/CustomRoute.util';
 import { roles } from '../Constant/CredentialConstant';
 import ProductDetail_Create from './ProductDetail_Create';
 import Category from './admin/Category';
+import Product from './admin/Product';
 
 const Admin = (props) => {
     const _useHistory = useHistory();
@@ -30,7 +31,7 @@ const Admin = (props) => {
             items: [
                 {
                     label: "Product Management",
-                    command: ()=> {}
+                    command: ()=> {_useHistory.push('/admin/product')}
                 },
                 {
                     label: "Category Management",
@@ -62,13 +63,16 @@ const Admin = (props) => {
     return (
         <div className='p-grid p-justify-center p-mt-1' style={{marginRight: '1px'}}>
             <PanelMenu multiple={true} model={items} style={{width: "16v", position: 'absolute', left: 0}}/>            
-            <div className='p-col-6' style={{minHeight:'82.3vh', backgroundColor: "whitesmoke"}}>
+            <div className='p-col-7' style={{minHeight:'82.3vh', backgroundColor: "whitesmoke"}}>
                 <Switch>
                     <CustomRoute status = {props.isCompleteInitUser} path='/product' backPath='/' roles={[roles.ADMIN]} exact>
                         <ProductDetail_Create onUpdate={onUpdateDataHandler}/>
                     </CustomRoute>
                     <CustomRoute status = {props.isCompleteInitUser} path='/admin/category' backPath='/' roles={[roles.ADMIN]}  exact>
                         <Category/>
+                    </CustomRoute>
+                    <CustomRoute status = {props.isCompleteInitUser} path='/admin/product' backPath='/' roles={[roles.ADMIN]}  exact>
+                        <Product/>
                     </CustomRoute>
                 </Switch>
             </div>

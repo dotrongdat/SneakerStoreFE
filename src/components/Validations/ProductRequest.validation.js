@@ -11,11 +11,11 @@ const checkExistSpecialCharacters=(value)=>{
 // } 
 
 const create=data=>{
-    const {name,quantity,description,publishedYear,price,album}=data;
+    const {name,quantity,description,price,album}=data;
     return [
         Validation({name})
-        .notEmpty('Name is empty',{ignore_whitespace:true})
-        .custom(checkExistSpecialCharacters,'Name contains special characters'),
+        .notEmpty('Name is empty',{ignore_whitespace:true}),
+        // .custom(checkExistSpecialCharacters,'Name contains special characters'),
 
         Validation({quantity})
         .notEmpty('Quantity is empty',{ignore_whitespace:true})
@@ -24,11 +24,6 @@ const create=data=>{
 
         Validation({description})
         .maxLength(2000,'Description is too long (max: 2000 letters)'),
-
-        Validation({publishedYear})
-        .notEmpty('Published Year is empty',{ignore_whitespace:true})
-        .min(1700,'Published year is invalid (min: 1700)')
-        .max(new Date().getFullYear(),'Published year is invalid (max is current)'),
 
         Validation({price})
         .notEmpty('Price is empty',{ignore_whitespace:true})
@@ -56,13 +51,13 @@ const search = data=>{
     ]
 }
 const update = data => {
-    const {name,quantity,description,publishedYear,price,album}=data;
+    const {name,quantity,description,price,album}=data;
 
     return [
         Validation({name})
         .notEmpty('Name is empty',{ignore_whitespace:true})
-        .bail()
-        .custom(checkExistSpecialCharacters,'Name contains specials characters'),
+        .bail(),
+        // .custom(checkExistSpecialCharacters,'Name contains specials characters'),
 
         Validation({album})
         .notEmpty('Album is empty',{ignore_whitespace:true}),
@@ -74,11 +69,6 @@ const update = data => {
 
         Validation({description})
         .maxLength(2000,'Description is too long (max: 2000 letters)'),
-
-        Validation({publishedYear})
-        .notEmpty('Published Year is empty',{ignore_whitespace:true})
-        .min(1700,'Published year is invalid (min: 1700)')
-        .max(new Date().getFullYear(),'Published year is invalid (max is current)'),
 
         Validation({price})
         .notEmpty('Price is empty',{ignore_whitespace:true})

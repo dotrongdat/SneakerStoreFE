@@ -6,7 +6,6 @@ import userService from '../../service/user.service';
 import statusCode from 'http-status-codes';
 import {useHistory,Link} from 'react-router-dom';
 import {Column} from 'primereact/column';
-import {InputNumber} from 'primereact/inputnumber';
 import {Button} from 'primereact/button';
 import {Checkbox} from 'primereact/checkbox';
 import { routeResource } from '../Constant/ResourceConstant';
@@ -14,128 +13,78 @@ import orderService from '../../service/order.service';
 import {Sidebar} from 'primereact/sidebar';
 import CheckOut from './CheckOut';
 import CustomConfirmDialog from '../Notifications/CustomConfirmDialog';
+import { toVNDCurrencyFormat } from '../Utils/Function.util';
+import InputNumber from '../Utils/Views/InputNumber';
+import { BACKGROUND_COLOR } from '../Constant';
 
-
+let t;
 const Cart = (props) =>{
-    let t;
     const _useHistory = useHistory();
-    const dispatch = useDispatch();
+    //const dispatch = useDispatch();
 
-    const {user,categories} = useSelector(state=>state);
-    const [checkedBoxList,setCheckedBoxList] =useState();
-    const [checkedBoxAll,setCheckedBoxAll]=useState(false);
+    const {user,categories,allProducts} = useSelector(state=>state);
+    const [selectedProduct,setSelectedProduct] = useState([]);
+    const [quantityInputValue,setQuantityInputValue] = useState();
     const [total,setTotal]=useState(0);
     const [checkoutSideBar,setCheckoutSideBar]=useState(false);
+    const [selectedRow, setSelectedRow] = useState([]);
+    const [cart,setCart] = useState([]);
     
-    const getCart = useCallback(async () =>{
-        global.loading.show();
-        const res = await userService.getCart();
-        switch (res.status){
-            case statusCode.OK: 
-                const {cart} = res.data.payload;
-                let checkedBoxListInitState={}; 
-                cart.forEach(i=>{
-                    checkedBoxListInitState = {...checkedBoxListInitState ,[i.product._id]:false};
-                });
-                setCheckedBoxList(checkedBoxListInitState);
-               dispatch({type:'updateCart',cart});
-                break;
-            case statusCode.UNAUTHORIZED:
-                _useHistory.replace('/signin');
-                break;
-            case statusCode.INTERNAL_SERVER_ERROR:
-                global.toast.show({severity:'error', summary: 'Fail', detail: res.data.message, life: 1500});
-                break;
-            default:
-        }
-        global.loading.hide();
-    },[]);
-    const onChangeQuantityInputHandler =useCallback(e =>{
-        const updateCart = async ()=>{
-            const {value} = e;
-            if(value){
-                global.loading.show();
-                let {cart} = user;
-                const _id = e.originalEvent.nativeEvent.target.parentElement.parentElement.id ||  e.originalEvent.nativeEvent.target.parentElement.id;
-                cart = cart.map((i)=>{
-                    let {product,quantity} = i;
-                    if(product._id === _id) quantity=value;
-                    return {product:product._id,quantity};
-                })      
-                const res = await userService.updateCart({cart});
-                switch (res.status) {
-                    case statusCode.OK: 
-                            // setCheckedBoxAll(false);
-                            break;
-                    case statusCode.UNAUTHORIZED:  
-                            _useHistory.replace('/signin');
-                            break;
-                    case statusCode.INTERNAL_SERVER_ERROR:
-                            global.toast.show({severity:'error', summary: 'Fail', detail: res.data.message, life: 1500});
-                            break;
-                    default: 
+    const onChangeQuantityInputHandler = (value,_id) =>{
+        //console.log(value);
+        let func = () => {
+            // const {value} = e;
+            if(value || value === 0){
+                const updateCart =  ()=>{
+                    if(quantityInputValue[_id].available >= value){
+                        let {cart} = user;
+                        //const _id = e.originalEvent.nativeEvent.target.parentElement.parentElement.id ||  e.originalEvent.nativeEvent.target.parentElement.id;
+                        const index = cart.findIndex(i=>i._id===_id);
+                        cart[index].quantity = value;
+                        userService.updateCart(cart);
+                        return true;
+                    } return false;                        
                 }
-                global.loading.hide();
+                const remove = ()=>{
+                    let {cart} = user;
+                    cart = cart.filter(i=> i._id!==_id);
+                    userService.updateCart(cart);
+                }
+                const reject = ()=>{
+                    // setQuantityInputValue(prevData=>{
+                    //     return {...prevData,
+                    //         [_id]: {
+                    //             ...prevData[_id],
+                    //             quantity: 1
+                    //         }
+                    //     }
+                    // })
+                }
+                if(value === 0){
+                    CustomConfirmDialog("Do you want to remove this product from your cart ?","Remove",()=>{
+                        remove();
+                        global.toast.show({severity:'success', summary: 'Cart', detail: 'This product has been remove from your cart', life: 1500});
+                    },reject);
+                    // console.log("Value = 0")
+                }else {
+                    if(updateCart()) global.toast.show({severity:'success', summary: 'Cart', detail: 'Update cart successfully', life: 1500});
+                }
             }
         }
-        clearTimeout(t);
-        t = setTimeout((updateCart),500);       
-    },[]);
-    const onClickCheckBoxHandler =useCallback(e =>{
-        const _id=e.value;
-        setCheckedBoxList((prevData)=>{
-            return {...prevData,[_id]:e.checked};
-        })
-    },[])
-    const onClickCheckBoxAllHandler = useCallback(async (e) => {
-        setTotal(0);
-        setCheckedBoxAll(e.checked);
-        setCheckedBoxList((prevData)=>{
-            let updateData={...prevData};
-            for(let property in prevData){
-                updateData[property]=e.checked;
-            }
-            return updateData;
-        })
-    },[])
-    const onClickDeleteButtonHandler = useCallback (() => {
-        CustomConfirmDialog('Do you want to remove this products from your cart ?','Remove',async ()=>{
-            global.loading.show();
-            let {cart} = user;
-            cart = cart.filter(i=>checkedBoxList[i.product._id]===false);
-            cart = cart.map((i)=>{
-                let {product,quantity} = i;
-                product = product._id;
-                return {product,quantity};
-            })        
-            const res = await userService.updateCart({cart});
-            switch (res.status) {
-                    case statusCode.OK: 
-                            setCheckedBoxAll(false);
-                            break;
-                    case statusCode.UNAUTHORIZED:  
-                            _useHistory.replace('/signin');
-                            break;
-                    case statusCode.INTERNAL_SERVER_ERROR:
-                            global.toast.show({severity:'error', summary: 'Fail', detail: res.data.message, life: 1500});                   
-                            break;
-                    default: 
-                }
-            global.loading.hide();
-        });        
-    },[checkedBoxList, user.cart])
+        func();
+        //if(value !== quantityInputValue[_id].quantity) {clearTimeout(t);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        //t = setTimeout(func,500);   }    
+    };
     const onClickConfirmCartHandler = useCallback(async() => {
-        let cart = [];
-        for(let property in checkedBoxList){
-            if(checkedBoxList[property]) cart.push(property);
-        }
-        const res = await orderService.validate({cart});
+        global.loading.show();
+        const res = await orderService.validate({cart:user.cart});
         switch (res.status){
             case statusCode.OK:
                 setCheckoutSideBar(true);
                 break;
             case statusCode.BAD_REQUEST:
-                await getCart();
+                //await getCart();
                 global.toast.show({severity:'error', summary: 'Fail', detail: 'Appear invalid items in your cart. Please check again!', life: 1500});               
                 break;
             case statusCode.UNAUTHORIZED:  
@@ -146,47 +95,61 @@ const Cart = (props) =>{
                 break;
             default:
         }
-    },[checkedBoxList, getCart]);
+        global.loading.hide();
+    },[]);
+    const onClickDeleteAllHandler = ()=>{
+        CustomConfirmDialog('Do you want to remove these products from your cart ?','Remove',()=>{
+            let {cart} = user;
+            const _id = selectedRow.map(i=>i.product._id);
+            cart = cart.filter(i=>!_id.includes(i._id));
+            userService.updateCart(cart);
+            global.toast.show({severity:'success', summary: 'Cart', detail: 'These products has been remove from your cart', life: 1500});               
+        });        
+    }
+    const onClickDeleteItemHandler = (_id) => {
+        CustomConfirmDialog('Do you want to remove this product from your cart ?','Remove',()=>{
+            userService.updateCart(user.cart.filter(i=>i._id !== _id));
+            global.toast.show({severity:'success', summary: 'Cart', detail: 'This product has been remove from your cart', life: 1500});               
+        });
+    }
     const onHideSideBarHandler = useCallback(() => setCheckoutSideBar(false),[]);
     const header = (
-        <div className="table-header">
-            <h4>Your Shopping Cart</h4>
-        </div>
+        <div className="p-d-flex p-jc-end">
+                    <Button className='p-button-danger' type="button" icon="pi pi-trash" label="Delete" onClick={onClickDeleteAllHandler} disabled={!selectedRow || !selectedRow.length}/>                          
+            </div>
     );
     const footer = `In total there are ${user.cart.length} products.`;
-    
-    const checkboxHeader = (
-        <React.Fragment>
-            <Checkbox checked={checkedBoxAll}  onChange={onClickCheckBoxAllHandler}/>
-            <Button icon='pi pi-trash' type='button' className='p-button-lg p-button-rounded p-button-secondary p-button-text' onClick={onClickDeleteButtonHandler}/>
-        </React.Fragment>
-    );
-    const checkBoxTemplate = (rowData) => {
-        return (
-            <React.Fragment>
-                {checkedBoxList && <Checkbox checked={checkedBoxList[rowData.product._id]}  onChange={onClickCheckBoxHandler} value={rowData.product._id}/>}
-            </React.Fragment>           
-        );        
+    const onSelectionChange = (e)=>{
+        setSelectedRow(e.value);
     }
     const nameBodyTemplate = (rowData) => {
         return (
-            <div>
-                <Link to={`/product/${rowData.product._id}`}>
-                    <img src={routeResource.image+'/'+rowData.product.album[0]} alt={rowData.product.name} style={{height:'10vh',width:'10vw'}}/>
+            <div className=''>
+                <Link to={`/product/${rowData.product._id}`}  style={{textDecoration:'none'}}>
+                    <img className='' src={rowData.product.album[0]} alt={rowData.product.name} style={{height:'5vw',width:'5vw'}}/>
+                    {/* <div className='p-col-8' style={{width:'50px',whiteSpace:'normal',marginLeft:'5px'}}> */}
+                        <span style={{marginLeft: '2px'}}>{rowData.product.name}</span>    
+                    {/* </div>                        */}
                 </Link>               
-                <p>{rowData.product.name}</p>
             </div>
         );        
     }
     const brandBodyTemplate = (rowData) => <p>{categories.find(category=>category._id === rowData.product.category).name}</p>
-    const priceBodyTemplate = (rowData) => <p>${` ${rowData.product.price}`}</p>
+    const priceBodyTemplate = (rowData) => <p>{toVNDCurrencyFormat(rowData.product.price)} VND</p>
     const quantityBodyTemplate = (rowData) => {
         return (
-            <InputNumber value={rowData.quantity} showButtons buttonLayout="horizontal" step={1} style={(rowData.product.quantity>=rowData.quantity)?{height:'2rem'}:{height:'2rem',backgroundColor:'red'}} size={1}
-                decrementButtonClassName="p-button-secondary" required incrementButtonClassName="p-button-secondary" incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus"
-                max={rowData.product.quantity} min={1} onChange={onChangeQuantityInputHandler} id = {rowData.product._id} tooltip={`Max: ${rowData.product.quantity}`}
-            /> 
+            // <InputNumber value={quantityInputValue[rowData.product._id].quantity} showButtons buttonLayout="horizontal" step={1} style={(rowData.product.quantity>=rowData.quantity)?{height:'2rem'}:{height:'2rem',backgroundColor:'red'}} size={1}
+            //     decrementButtonClassName="p-button-secondary" required incrementButtonClassName="p-button-secondary" incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus"
+            //     max={rowData.product.quantity} min={0} onValueChange={(e)=>onChangeQuantityInputHandler(e,rowData.product._id)} id = {rowData.product._id} tooltip={`Available: ${rowData.product.quantity}`}
+            // /> 
+            <InputNumber value={quantityInputValue[rowData.product._id].quantity} beforeValueChange={(value)=>onChangeQuantityInputHandler(value,rowData.product._id)} 
+                size={3} min={0} max={rowData.product.quantity} 
+                tooltip={`Available: ${rowData.product.quantity}`}
+            />
         );
+    }
+    const actionBodyTemplate = (rowData) => {
+        return <Button className='p-button-warning' type='button' icon='pi pi-trash' onClick={()=>onClickDeleteItemHandler(rowData.product._id)}/>
     }
     const rowClass = (rowData) =>{
         return {
@@ -195,44 +158,69 @@ const Cart = (props) =>{
         }
     }
     useEffect(()=>{
-        if(checkedBoxList){
-            let _total=0;
-            user.cart.forEach(i=>{
-                if(checkedBoxList[i.product._id]===true) _total+=(i.quantity * i.product.price);
-            })
-            setTotal(_total);
-        }
-    },[checkedBoxList,user.cart])
+        setSelectedProduct(selectedRow.map(i=>{
+            return {...i.product, quantity: i.quantity}
+        }))
+    },[selectedRow])
     useEffect(()=>{
-        let checkedBoxListInitState={};
-        user.cart.forEach(i=>{
-            checkedBoxListInitState = {...checkedBoxListInitState ,[i.product._id]:false};
+        let _cart = [];
+        let _quantityInputValue = {};
+        let _selectedRow = selectedRow;
+        if(allProducts.length > 0) user.cart.forEach(i=>{
+            const product = allProducts.find(p=>p._id === i._id);
+            _cart.push({quantity: parseInt(i.quantity), product});
+            _quantityInputValue = {..._quantityInputValue, 
+                [i._id]:{
+                    quantity:i.quantity,
+                    available: product.quantity
+                }
+            }
+            const index = _selectedRow.findIndex(row=>row.product._id === i._id);
+            if(index !== -1)_selectedRow[index].quantity = parseInt(i.quantity);
         });
-        setCheckedBoxList(checkedBoxListInitState);
+        setSelectedRow(_selectedRow);
+        setCart(_cart);
         setCheckoutSideBar(false);
-    },[user.cart]);
+        setQuantityInputValue(_quantityInputValue);
+    },[allProducts, user]);
+    useEffect(()=>{
+        setTotal(()=>{
+            let _total = 0;
+            selectedRow.forEach(v=> _total += v.quantity * v.product.price);
+            return _total
+        })
+    },[JSON.stringify(selectedRow)])
     return (
         <React.Fragment>
             <Sidebar visible={checkoutSideBar} fullScreen onHide={onHideSideBarHandler}>
-                <CheckOut hide={onHideSideBarHandler} items={checkedBoxList} total={total}/>
+                <CheckOut hide={onHideSideBarHandler} items={selectedProduct} total={total}/>
             </Sidebar>
-            <div className='p-grid p-justify-center p-mt-5'>
-                <div className='cart p-grid p-justify-center p-col-10'>
-                    <DataTable scrollable scrollHeight="400px" className='p-col-12' value={user.cart} header={header} footer={footer} rowClassName={rowClass} showGridlines>
-                        <Column header={checkboxHeader} body={checkBoxTemplate} />
+            <div className='p-d-flex p-mt-5'>
+                <div className='cart p-justify-center p-col-8'>
+                    <DataTable emptyMessage="Your cart is empty" className='p-col-12' responsiveLayout="scroll" dataKey='product._id'
+                        value={cart} header={header} footer={footer} rowClassName={rowClass} showGridlines
+                        selection={selectedRow} onSelectionChange={onSelectionChange}>
+                        <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} exportable={false}></Column>
                         <Column header='Name' body={nameBodyTemplate}/>
                         <Column header='Brand' body={brandBodyTemplate}/>
                         <Column header='Price' body={priceBodyTemplate}/>
                         <Column header='Quantity' field='quantity' body={quantityBodyTemplate}/>
-                    </DataTable>
-                    <div className='p-grid p-justify-start p-col-6'>
-                        <h2>Total: $ {total}</h2>
+                        <Column body={actionBodyTemplate}/>
+                    </DataTable>   
+                </div>      
+                <div className='p-col-4' style={{backgroundColor: BACKGROUND_COLOR}}>
+                    <div className='p-col-11 p-ml-2 p-p-5' style={{backgroundColor: 'white', borderRadius: '10px'}}>
+                        <h4 style={{fontFamily: 'cursive', fontWeight: 'bolder'}}>Total</h4>
+                        <div className='p-d-flex p-jc-between'>
+                            <p>Provisional sum</p>
+                            <p style={{fontSize:'1.1rem', fontWeight:'bolder'}}>{toVNDCurrencyFormat(total)} VND</p>
+                        </div>
+                        <div className='p-d-flex p-jc-around'>
+                            <Button className='p-col-6' style={{color: 'green', fontWeight: 'bolder', borderColor: 'green', backgroundColor: BACKGROUND_COLOR}}  label='Shopping' onClick={e=> _useHistory.replace('/')}/> 
+                            <Button className='p-col-5 p-button-warning' style={{color: 'white', borderRadius: '20px'}} disabled={total === 0} label='Confirm Cart' onClick={onClickConfirmCartHandler}/>
+                        </div>
                     </div>   
-                    <div className='p-grid p-justify-end p-col-6'>
-                        <Button icon='pi pi-credit-card' disabled={total === 0} label='Confirm Cart' onClick={onClickConfirmCartHandler} className='p-col-4 p-mr-5'/>
-                        <Button className='p-col-4' label='Continue Shopping' onClick={e=> _useHistory.replace('/')}/> 
-                    </div>      
-                </div>            
+                </div>      
             </div>
         </React.Fragment>
     );

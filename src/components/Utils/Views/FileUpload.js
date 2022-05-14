@@ -1,7 +1,7 @@
 import React from 'react';
 import {FileUpload as FileUploadP} from 'primereact/fileupload';
 import path from 'path';
-import {validFileExtension} from '../../Constant/ResourceConstant';
+import {validFileExtension, validFileType} from '../../Constant/ResourceConstant';
 
 const FileUpload =(props) => {
     const chooseOptions = {icon: 'pi pi-fw pi-images', iconOnly:true, className: 'custom-choose-btn p-button-rounded p-button-outlined'};
@@ -13,7 +13,7 @@ const FileUpload =(props) => {
         const _chooseItems=Object.values(e.files);
         const chooseItems=[];
         _refItems.map((file)=>{
-            if(validFileExtension.includes(path.extname(file.name)) && file.type==='image/jpeg'){
+            if(file.type.startsWith("image/",0)){
                 if(_chooseItems.includes(file)) 
                 chooseItems.push({
                     objectURL:file.objectURL,
@@ -21,7 +21,7 @@ const FileUpload =(props) => {
                 });
             }else valid=false;
         })
-        !valid? props.invalidFileHandler(props.errorLabel,['File is invalid (accept: .png/.jpg)']):props.invalidFileHandler(props.errorLabel,[]);
+        !valid? props.invalidFileHandler(props.errorLabel,['File is invalid (only accept image file)']):props.invalidFileHandler(props.errorLabel,[]);
         props.onChoose(chooseItems);
     }
     const onRemoveTemplate = (e)=>{
@@ -52,7 +52,7 @@ const FileUpload =(props) => {
             <FileUploadP style={{fontSize:'70%'}} headerTemplate={headerTemplate} emptyTemplate={emptyTemplate} 
             chooseOptions={chooseOptions} cancelOptions={cancelOptions} 
             onSelect={onSelectTemplate} onRemove={onRemoveTemplate} onClear={onClearTemplate}
-            ref={props._ref} multiple={props.multiple} accept=".jpg,.png" maxFileSize={1000000}/>
+            ref={props._ref} multiple={props.multiple} accept="image/*" maxFileSize={1000000}/>
         </div>
     );
 }

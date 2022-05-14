@@ -15,44 +15,46 @@ const SearchBar = (props) => {
     const menuRef = useRef(null);
     const {user,isSignIn,categories} = useSelector(state=>state);
     const [categoryItems,setCategoryItems] = useState([]);
+    const [totalInCart,setTotalInCart] = useState(0);
     const onSubmitHandler = async (e) => {
         e.preventDefault();
-        const params={
-            name:inputText.current.value,
-            page:1,
-            sortBy:'name',
-            priceFrom: 0,
-            priceTo:Number.MAX_SAFE_INTEGER,
-            inc: true
-        }
-        await props.onSubmit(params,['category']);
-        _useHistory.replace('/');
+        // const params={
+        //     name:inputText.current.value,
+        //     page:1,
+        //     sortBy:'name',
+        //     priceFrom: 0,
+        //     priceTo:Number.MAX_SAFE_INTEGER,
+        //     inc: true
+        // }
+        // await props.onSubmit(params,['category']);
+        // if(global.breadcrumb) global.breadcrumb.pullAll();
+        _useHistory.push(`/search?key=${inputText.current.value}`);
     };
     const onClickShoppingCartHandler = (e) =>{
-        _useHistory.replace('/cart');
+        _useHistory.push('/cart');
     };
-    const onClickHomeHandler = async ()=> {
-        await props.onSubmit({
-            name:'',
-            page:1,
-            sortBy:'name',
-            priceFrom: 0,
-            priceTo:Number.MAX_SAFE_INTEGER,
-            inc: true
-        },['category']);
-        _useHistory.replace('/');
-    };
+    // const onClickHomeHandler = async ()=> {
+    //     await props.onSubmit({
+    //         name:'',
+    //         page:1,
+    //         sortBy:'name',
+    //         priceFrom: 0,
+    //         priceTo:Number.MAX_SAFE_INTEGER,
+    //         inc: true
+    //     },['category']);
+    //     _useHistory.replace('/');
+    // };
 
     const cartButton = () =>{
         return (
             <i  className='pi pi-shopping-cart p-text-secondary p-overlay-badge' 
                 style={{marginLeft:'2vw',marginTop:'0.4vh',cursor:'pointer',fontSize:'2rem'}} 
                 onClick={onClickShoppingCartHandler}>
-                {isSignIn && user.cart.length>0  && <Badge value={user.cart.length} severity='info'></Badge>}
+                <Badge value={totalInCart} severity='info'></Badge>
             </i> 
         );
     }
-    const homeButton = () => <Button className='p-button-rounded p-button-secondary' type='button' icon='pi pi-home' style={{marginRight:'2vw'}} onClick={onClickHomeHandler}/>
+    // const homeButton = () => <Button className='p-button-rounded p-button-secondary' type='button' icon='pi pi-home' style={{marginRight:'2vw'}} onClick={onClickHomeHandler}/>
     const searchInput = ()=>{
         return (
             <React.Fragment>
@@ -78,7 +80,10 @@ const SearchBar = (props) => {
                         label: category.name,
                         command: ()=>{
                             productService.findByCategory(category._id);
-                            _useHistory.push("/product");
+                            _useHistory.push(`/category?cate_id=${category._id}`);
+                            inputText.current.value = '';
+                            // global.breadcrumb.pullAll();
+                            // global.breadcrumb.push(category.name,`/category?cate_id=${category._id}`)                         
                         }
                     });
                 }
@@ -87,11 +92,16 @@ const SearchBar = (props) => {
             return updateData;
         })
     },[categories]);
+    useEffect(()=>{
+        let _total=0;
+        user.cart.forEach(i=>_total+=parseInt(i.quantity));
+        setTotalInCart(_total);
+    },[user])
     return (
         <div className="search-bar">
         <form onSubmit={onSubmitHandler}>
-            <div className="p-grid p-justify-center" style={{paddingTop:'0.3vh',margin:'0px'}}>            
-                <div className="p-col-8 p-inputgroup">
+            <div className="p-grid p-mt-1 p-justify-center" style={{backgroundColor: '#e2f7c8'}}>            
+                <div className="p-col-12 p-inputgroup">
                         {/* {homeButton()} */}
                         {overlayMenu()}
                         {searchInput()}

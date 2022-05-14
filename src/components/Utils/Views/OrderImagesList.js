@@ -3,11 +3,12 @@ import {OrderList} from 'primereact/orderlist';
 import {routeResource} from '../../Constant/ResourceConstant';
 import { Button } from 'primereact/button';
 const OrderImage = (props) =>{
+    console.log(props.items);
     const itemTemplate = (item) =>{
         return (
             <div className="p-grid">
                 <div className="p-justify-start p-col-11">
-                    <img style={{height:'10vh',width:'10vw'}} src={(item.objectURL?item.objectURL:routeResource.image+'/'+item)} alt={'itemImg'}/>
+                    <img style={{height:'10vh',width:'10vw', maxHeight:'50px', maxWidth:'80px'}} src={(item.objectURL?item.objectURL:item)} alt={'itemImg'}/>
                 </div>
                 {(!item.objectURL && props.allowRemove)?
                 <div className="p-col-1">

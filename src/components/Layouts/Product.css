@@ -1,20 +1,22 @@
 .product_image{
     margin-top: 2vh;
-    height: 60%;
-    width: 93%;
+    height: 50%;
+    width: 83%;
 }
 .product_name{
-    font-size: 3vh;
+    font-size: 1.1vw;
 }
 .product_price{
     color: coral;
-    font-size: 3vh;
+    font-size: 1vw;
 }
 .product{
     border: 5px;
-    border-radius: 5px;
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-    background-color: rgb(252, 247, 174);
-    height: 40vh;
+    border-radius: 7px;
+    /* box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19); */
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+    background-color: 'white';
+    height: 37vh;
     text-align: center;
+    position: relative;
 }

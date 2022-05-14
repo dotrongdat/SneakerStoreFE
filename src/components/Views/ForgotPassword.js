@@ -186,12 +186,12 @@ const ForgotPassword = (props)=>{
     }
     
     return (
-        <div className='p-grid p-justify-center p-mt-6' style={{height: '90%'}}>
-            <div className='p-col-8 p-grid'
+        <div className='p-grid p-justify-center p-mt-6' style={{height: '80%',boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px'}}>
+            {/* <div className='p-col-8 p-grid'
                 style={{
                     boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px'
                 }}
-            >
+            > */}
                 <div className='p-col-4' style={{backgroundColor: '#ceffc4'}}>
                     <div className='p-grid p-justify-center p-ai-center vertical-container' style={{height: '100%'}}>
                         <Image src={logoURL} height="350"/>
@@ -266,7 +266,7 @@ const ForgotPassword = (props)=>{
                     <div className='p-col-12' style={{textAlign:'center'}}>
                         <Link to='/signin' style={{textDecoration:'none'}}>You have an account? Sign In</Link>
                     </div>   
-                </div>
+                {/* </div> */}
             </div>           
         </div>
     );

@@ -1,11 +1,14 @@
+import { isArray } from 'lodash';
 import {createStore} from 'redux';
 import {roles} from '../components/Constant/CredentialConstant';
 
 const DEFAULT_STATE={
     isSignIn: false,
+    isInitialize: false,
     user: {
         role:roles.NO_AUTH,
-        cart:[]
+        cart:[],
+        // ip: null
     },
     categories:[],
     allProducts:[],
@@ -25,11 +28,36 @@ const reducer = (state=DEFAULT_STATE, action) =>{
         //     global.socket.emit('SignOut',user);            
         //     return {...state,isSignIn:true,user};
         // }
+        case 'initialize': {
+            return {...state, isInitialize: true}
+        }
+        // case 'setIPAddress': {
+        //     return {...state, user : {...state.user, ip: action.ip}}
+        // }
         case 'findProductByCategory':{
             return {...state,searchProducts: action.searchProducts}
         }
+        case 'initProduct': {
+            return {...state,allProducts: action.products}
+        }
+        case 'addProduct': {
+            return {...state,allProducts: [...state.allProducts, action.product]}
+        }
+        case 'updateProduct': {
+            let products = [...state.allProducts];
+            const index = products.findIndex(product=>product._id === action.product._id);
+            products[index]  = action.product;
+            return {...state, allProducts: products}
+        }
+        case 'deleteProduct':{
+            let products = [...state.allProducts];
+            if(isArray(action._id)){
+                products = products.filter(product=>!action._id.includes(product._id));
+            } else products = products.filter(product=>action._id !== product._id);
+            return {...state, allProducts: products}
+        }
         case 'sync':{
-            console.log(action.user);
+            //console.log(action.user);
             return {...state,user:action.user};
         }
         case 'signin': {
@@ -49,7 +77,15 @@ const reducer = (state=DEFAULT_STATE, action) =>{
             localStorage.removeItem('refresh');
             localStorage.removeItem('user');
             global.socket.emit('signOut',state.user, JSON.parse(localStorage.getItem('socketID')));
-            return {...DEFAULT_STATE,categories:state.categories};
+            return {
+                ...DEFAULT_STATE,
+                categories:state.categories,
+                allProducts: state.allProducts,
+                isInitialize: true,
+                user: {...DEFAULT_STATE.user,
+                    cart: state.user.cart
+                }
+            };
         }
         case 'initializeCategories':{
             return {...state,categories:action.categories};
@@ -64,7 +100,16 @@ const reducer = (state=DEFAULT_STATE, action) =>{
             return {...state, categories}
         }
         case 'updateCart': {
+            localStorage.setItem('cart',JSON.stringify(action.cart));
             return {...state,user : {...state.user,cart: action.cart}};
+        }
+        case 'addToCart': {
+            const index = state.user.cart.findIndex(v=>v._id === action.product._id);
+            let cart = state.user.cart;
+            if(index !== -1) cart[index].quantity += action.product.quantity
+            else cart.push(action.product);
+            localStorage.setItem('cart',JSON.stringify(cart));
+            return {...state, user : {...state.user, cart}};
         }
         default: return state;
     }
